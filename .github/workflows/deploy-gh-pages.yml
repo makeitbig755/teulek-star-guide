@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,9 +31,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build
-        # Set base path so assets resolve correctly under https://<user>.github.io/<repo>/
-        # If you deploy to a custom domain or a user/organization root site, change to "/"
-        run: bun run build -- --base="/"
+        run: bun run build
 
       - name: Add SPA 404 fallback
         run: cp dist/index.html dist/404.html
@@ -46,11 +45,14 @@ jobs:
           path: ./dist
 
   deploy:
+    needs: build
+
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
