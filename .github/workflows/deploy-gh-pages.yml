@@ -32,7 +32,7 @@ jobs:
       - name: Build
         # Set base path so assets resolve correctly under https://<user>.github.io/<repo>/
         # If you deploy to a custom domain or a user/organization root site, change to "/"
-        run: bun run build -- --base="/${{ github.event.repository.name }}/"
+        run: bun run build -- --base="/"
 
       - name: Add SPA 404 fallback
         run: cp dist/index.html dist/404.html
