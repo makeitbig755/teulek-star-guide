@@ -1,0 +1,55 @@
+name: Deploy to Netlify
+
+# Deploys the site to Netlify on every push to main.
+#
+# REQUIRED GitHub repository secrets (Settings → Secrets and variables → Actions):
+#   NETLIFY_AUTH_TOKEN → https://app.netlify.com/user/applications#personal-access-tokens
+#   NETLIFY_SITE_ID    → Site settings → Site information → Site ID (create the site first)
+#
+# After the first successful run, your live URL will be printed in the job logs
+# and visible in your Netlify dashboard (e.g. https://your-site.netlify.app).
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & deploy to Netlify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Netlify
+        id: deploy
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: ./dist
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions: ${{ github.event.head_commit.message }}"
+          enable-pull-request-comment: false
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 5
+
+      - name: Job summary
+        run: |
+          echo "### 🚀 Deployment successful" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live URL: ${{ steps.deploy.outputs.deploy-url }}" >> "$GITHUB_STEP_SUMMARY"
